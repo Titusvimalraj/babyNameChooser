@@ -1,95 +1,78 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// app/page.tsx
+'use client';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [girlNames, setGirlNames] = useState<string[]>([]);
+  const [boyNames, setBoyNames] = useState<string[]>([]);
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
+  const [userName, setUserName] = useState<string>('');
+  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  useEffect(() => {
+    const storedToken = localStorage.getItem('userToken');
+    if (!storedToken) {
+      router.push('/user/login');
+    } else {
+      fetch('/api/user/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: storedToken }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.valid) {
+            setToken(storedToken);
+            setUserName(data.user.username);
+          } else {
+            router.push('/user/login');
+          }
+        });
+    }
+  }, [router]);
+
+  useEffect(() => {
+    fetch('/api/names')
+      .then(res => res.json())
+      .then(data => {
+        setGirlNames(data.girlNames.map((n: { name: string }) => n.name));
+        setBoyNames(data.boyNames.map((n: { name: string }) => n.name));
+      });
+  }, []);
+
+  const handleSelectName = (name: string) => {
+    if (selectedNames.length < 10 && !selectedNames.includes(name)) {
+      setSelectedNames([...selectedNames, name]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ userName, selectedNames }),
+    });
+  };
+
+  return (
+    <div>
+      <h1>Welcome, {userName}</h1>
+      <input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Your Name" />
+      <h2>Girl Names</h2>
+      <ul>
+        {girlNames.map(name => <li key={name} onClick={() => handleSelectName(name)}>{name}</li>)}
+      </ul>
+      <h2>Boy Names</h2>
+      <ul>
+        {boyNames.map(name => <li key={name} onClick={() => handleSelectName(name)}>{name}</li>)}
+      </ul>
+      <h2>Selected Names</h2>
+      <ul>
+        {selectedNames.map(name => <li key={name}>{name}</li>)}
+      </ul>
+      <button onClick={handleSubmit}>Submit</button>
     </div>
   );
 }
