@@ -7,7 +7,7 @@ export interface IName extends Document {
 }
 
 const NameSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique:true },
   type: { type: String, enum: ['boy', 'girl'], required: true },
 });
 

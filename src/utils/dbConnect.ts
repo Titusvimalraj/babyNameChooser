@@ -8,9 +8,26 @@ async function dbConnect() {
     return;
   }
 
-  const db = await mongoose.connect(process.env.MONGODB_URI!);
-
-  connection.isConnected = db.connections[0].readyState;
+  try {
+    console.log("🚀 ~ dbConnect ~ process.env.MONGODB_URI:", process.env.MONGODB_URI)
+    const db = await mongoose.connect(process.env.MONGODB_URI!);
+    connection.isConnected = db.connections[0].readyState;
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
 }
 
-export default dbConnect;
+async function dbDisconnect() {
+  if (connection.isConnected) {
+    try {
+      await mongoose.disconnect();
+      connection.isConnected = undefined;
+      console.log('Disconnected from MongoDB');
+    } catch (error) {
+      console.error('MongoDB disconnection error:', error);
+    }
+  }
+}
+
+export { dbConnect, dbDisconnect };
