@@ -136,7 +136,6 @@ const UserPageContent = () => {
 		<>
 			{token && (
 				<div className="p-2">
-					{!userName && (
 						<TextField
 							sx={{
 								backgroundColor: "white",
@@ -148,7 +147,6 @@ const UserPageContent = () => {
 							fullWidth
 							margin="normal"
 						/>
-					)}
 					<NameSelection
 						selectedNames={selectedNames}
 						handleNameDeselect={handleNameDeselect}
