@@ -1,5 +1,5 @@
 // app/api/admin/random-names/route.ts
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { dbConnect } from '@/utils/dbConnect';
 import Submission from '@/models/Submission';
 import { withAuth } from '@/utils/withAuth';
