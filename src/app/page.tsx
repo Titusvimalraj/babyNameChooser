@@ -136,7 +136,7 @@ const UserPageContent = () => {
 		<>
 			{token && (
 				<div className="p-2">
-					{userName && (
+					{!userName && (
 						<TextField
 							sx={{
 								backgroundColor: "white",
