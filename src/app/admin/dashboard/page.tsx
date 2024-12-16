@@ -67,6 +67,8 @@ export default function AdminDashboard() {
 	const [newNameType, setNewNameType] = useState<"boy" | "girl">("boy");
 	const [submittingNames, setSubmittingNames] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [randomBoyName, setRandomBoyName] = useState<string>("");
+	const [randomGirlName, setRandomGirlName] = useState<string>("");
 	const router = useRouter();
 
 	useEffect(() => {
@@ -108,6 +110,24 @@ export default function AdminDashboard() {
 	const logoutToLoginPage = (res: { status: number }) => {
 		if (res.status === 401) router.push("/admin/login");
 		return;
+	};
+
+	const fetchRandomNames = async () => {
+		if (!adminToken) {
+			alert("Admin token not found");
+			return;
+		}
+		const res = await fetch("/api/admin/random-names", {
+			headers: { Authorization: `Bearer ${adminToken}` },
+		});
+		logoutToLoginPage(res);
+		if (res.status === 200) {
+			const data = await res.json();
+			setRandomBoyName(data.randomBoyName);
+			setRandomGirlName(data.randomGirlName);
+		} else {
+			alert("Failed to fetch random names");
+		}
 	};
 
 	const generateToken = async () => {
@@ -241,108 +261,121 @@ export default function AdminDashboard() {
 
 	return (
 		<ThemeProvider theme={darkTheme}>
-			{adminToken && <div className="p-3">
-				<Typography className="pt-1 pb-0" variant="h5" gutterBottom>
-					Admin Dashboard
-				</Typography>
-				<LoadingButton
-					onClick={generateToken}
-					endIcon={<SettingsSuggestIcon />}
-					loading={loading}
-					loadingPosition="end"
-					variant="contained"
-				>
-					Generate User Token
-				</LoadingButton>
-				{newUserTokenLink && (
-					<div>
-						<div style={{ wordWrap: "break-word" }}>{newUserToken}</div>
-						<Button
-							variant="contained"
-							color="success"
-							endIcon={<WhatsAppIcon sx={{ color: "white" }} />}
-							href={`https://wa.me/?text=${encodeURIComponent(
-								`Here is your access link: ${newUserTokenLink}`
-							)}`}
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							Share on WhatsApp
-						</Button>
-					</div>
-				)}
-				<Typography className="p-3 pt-1 pb-0" variant="h6" gutterBottom>
-					Name Counts
-				</Typography>
-				<ul className="pt-0 pb-2 p-3">
-					{nameCounts &&
-						Object.entries(nameCounts).map(([name, count]) => (
-							<li key={name}>
-								{name}: {count}
-							</li>
-						))}
-				</ul>
-				<div className="p-3 pt-0">
-					<Typography className="p-3 pt-0 pb-0" variant="h6" gutterBottom>
-						Add Names
+			{adminToken && (
+				<div className="p-3">
+					<Typography className="pt-1 pb-0" variant="h5" gutterBottom>
+						Admin Dashboard
 					</Typography>
-					<Box
-						component="form"
-						sx={{ "& .MuiTextField-root": { m: 1, width: "25ch" } }}
-						noValidate
-						autoComplete="off"
+					<LoadingButton
+						onClick={generateToken}
+						endIcon={<SettingsSuggestIcon />}
+						loading={loading}
+						loadingPosition="end"
+						variant="contained"
 					>
+						Generate User Token
+					</LoadingButton>
+					{newUserTokenLink && (
 						<div>
-							<TextField
-								id="new-names-adding-text-area"
-								value={newNames}
-								onChange={(e) => setNewNames(e.target.value)}
-								label="Enter names separated by commas"
-								multiline
-								maxRows={10}
-							/>
-						</div>
-					</Box>
-					<div style={{ display: "flex", justifyContent: "start" }}>
-						<div className="p-2">
-							<FormControl fullWidth>
-								<InputLabel id="genderType">Gender</InputLabel>
-								<Select
-									labelId="genderType-select-label"
-									id="genderType-select"
-									value={newNameType}
-									label="Age"
-									onChange={(e) =>
-										setNewNameType(e.target.value as "boy" | "girl")
-									}
-								>
-									<MenuItem value={"boy"}>Boy</MenuItem>
-									<MenuItem value={"girl"}>Girl</MenuItem>
-								</Select>
-							</FormControl>
-						</div>
-
-						<div className="p-2 flex justify-content-center">
+							<div style={{ wordWrap: "break-word" }}>{newUserToken}</div>
 							<Button
-								color="primary"
 								variant="contained"
-								onClick={handleAddNames}
+								color="success"
+								endIcon={<WhatsAppIcon sx={{ color: "white" }} />}
+								href={`https://wa.me/?text=${encodeURIComponent(
+									`Here is your access link: ${newUserTokenLink}`
+								)}`}
+								target="_blank"
+								rel="noopener noreferrer"
 							>
-								Add Names
+								Share on WhatsApp
 							</Button>
 						</div>
+					)}
+					<div className="pt-2">
+						<Button
+							color="primary"
+							variant="contained"
+							onClick={fetchRandomNames}
+						>
+							Get Random Names
+						</Button>
+						{randomBoyName && <div>Random Boy Name: {randomBoyName}</div>}
+						{randomGirlName && <div>Random Girl Name: {randomGirlName}</div>}
 					</div>
+					<Typography className="p-3 pt-1 pb-0" variant="h6" gutterBottom>
+						Name Counts
+					</Typography>
+					<ul className="pt-0 pb-2 p-3">
+						{nameCounts &&
+							Object.entries(nameCounts).map(([name, count]) => (
+								<li key={name}>
+									{name}: {count}
+								</li>
+							))}
+					</ul>
+					<div className="p-3 pt-0">
+						<Typography className="p-3 pt-0 pb-0" variant="h6" gutterBottom>
+							Add Names
+						</Typography>
+						<Box
+							component="form"
+							sx={{ "& .MuiTextField-root": { m: 1, width: "25ch" } }}
+							noValidate
+							autoComplete="off"
+						>
+							<div>
+								<TextField
+									id="new-names-adding-text-area"
+									value={newNames}
+									onChange={(e) => setNewNames(e.target.value)}
+									label="Enter names separated by commas"
+									multiline
+									maxRows={10}
+								/>
+							</div>
+						</Box>
+						<div style={{ display: "flex", justifyContent: "start" }}>
+							<div className="p-2">
+								<FormControl fullWidth>
+									<InputLabel id="genderType">Gender</InputLabel>
+									<Select
+										labelId="genderType-select-label"
+										id="genderType-select"
+										value={newNameType}
+										label="Age"
+										onChange={(e) =>
+											setNewNameType(e.target.value as "boy" | "girl")
+										}
+									>
+										<MenuItem value={"boy"}>Boy</MenuItem>
+										<MenuItem value={"girl"}>Girl</MenuItem>
+									</Select>
+								</FormControl>
+							</div>
+
+							<div className="p-2 flex justify-content-center">
+								<Button
+									color="primary"
+									variant="contained"
+									onClick={handleAddNames}
+								>
+									Add Names
+								</Button>
+							</div>
+						</div>
+					</div>
+					<NameSelection
+						selectedNames={selectedNames}
+						handleNameDeselect={handleNameDeselect}
+						handleSubmit={handleSubmit}
+						girlNames={girlNames}
+						boyNames={boyNames}
+						handleSelectName={handleSelectName}
+						submittingNames={submittingNames}
+					/>
 				</div>
-				<NameSelection
-					selectedNames={selectedNames}
-					handleNameDeselect={handleNameDeselect}
-					handleSubmit={handleSubmit}
-					girlNames={girlNames}
-					boyNames={boyNames}
-					handleSelectName={handleSelectName}
-					submittingNames={submittingNames}
-				/>
-			</div>}
+			)}
 		</ThemeProvider>
 	);
 }
