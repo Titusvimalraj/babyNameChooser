@@ -1,6 +1,6 @@
 // app/api/admin/random-names/route.ts
 import { NextResponse, NextRequest } from 'next/server';
-import { dbConnect, dbDisconnect } from '@/utils/dbConnect';
+import { dbConnect } from '@/utils/dbConnect';
 import Submission from '@/models/Submission';
 import { withAuth } from '@/utils/withAuth';
 import { Submission as Submissions } from '@/app/admin/dashboard/page';
