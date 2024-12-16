@@ -2,9 +2,9 @@
 import { NextResponse } from 'next/server';
 import { dbConnect, dbDisconnect } from '@/utils/dbConnect';
 import Name from '@/models/Name';
-import { withAuth } from '@/utils/withAuth';
+import { withAdminAuth } from '@/utils/withAuth';
 
-export const POST = withAuth(async (req: Request) => {
+export const POST = withAdminAuth(async (req: Request) => {
   await dbConnect();
   try {
     const { names, type } = await req.json();

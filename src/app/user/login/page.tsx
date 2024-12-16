@@ -1,22 +1,69 @@
 // app/user/login/page.tsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
 
-export default function UserLogin() {
+const UserLogin = () => {
   const [token, setToken] = useState('');
+  const [userName, setUserName] = useState('');
   const router = useRouter();
 
+  useEffect(() => {
+    // Extract token from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+    }
+  }, []);
+
   const handleLogin = () => {
-    localStorage.setItem('userToken', token);
-    router.push('/');
+    if (token && userName) {
+      localStorage.setItem('userToken', token);
+      localStorage.setItem('userName', userName);
+      router.push('/');
+    } else {
+      alert('Please enter a token and your name.');
+    }
   };
 
   return (
-    <div>
+    <div className='p-2'>
       <h1>User Login</h1>
-      <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Token" />
-      <button onClick={handleLogin}>Login</button>
+      <TextField
+        sx={{
+          backgroundColor:'white'
+        }}
+        label="Your Name"
+        variant="outlined"
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+        fullWidth
+        margin="normal"
+      />
+      <TextField
+        sx={{
+          backgroundColor:'white'
+        }}
+        label="Token"
+        variant="outlined"
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+        fullWidth
+        margin="normal"
+      />
+      <Button
+        variant="contained"
+        onClick={handleLogin}
+        fullWidth
+        style={{ marginTop: '16px' }}
+      >
+        Login
+      </Button>
     </div>
   );
-}
+};
+
+export default UserLogin;

@@ -1,19 +1,48 @@
 // app/admin/dashboard/page.tsx
 "use client";
 import { useState, useEffect } from "react";
+import LoadingButton from "@mui/lab/LoadingButton";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
 import { useRouter } from "next/navigation";
 import NamesSelector from "@/components/shared/NamesSelector";
-import ListItemText from "@mui/material/ListItemText";
-import { List, ListItem } from "@mui/material";
+import {
+	Box,
+	Button,
+	createTheme,
+	FormControl,
+	InputLabel,
+	MenuItem,
+	Select,
+	TextField,
+	ThemeProvider,
+	Typography,
+} from "@mui/material";
+import NameChip from "../../../components/shared/NameChip";
+import SendIcon from "@mui/icons-material/Send";
+import Grid from "@mui/material/Grid2";
+import NameSelection from "@/components/NameSelection";
+
+const darkTheme = createTheme({
+	palette: {
+		mode: "dark",
+		text: {
+			primary: "rgba(255, 255, 255, 0.87)",
+			secondary: "rgba(255, 255, 255, 0.6)",
+			disabled: "rgba(255, 255, 255, 0.38)",
+		},
+		background: { default: "#121212", paper: "#1f1f1f" },
+	},
+});
 
 const style = {
 	py: 0,
 	width: "100%",
-	maxWidth: 360,
 	borderRadius: 2,
 	border: "1px solid",
 	borderColor: "divider",
 	backgroundColor: "background.paper",
+	padding: "5px",
 };
 export interface Name {
 	_id?: string;
@@ -29,15 +58,22 @@ export interface Submission {
 export default function AdminDashboard() {
 	const adminToken = localStorage.getItem("adminToken");
 	const [submissions, setSubmissions] = useState<Submission[]>([]);
+	const [newUserTokenLink, setNewUserTokenLink] = useState<string>("");
 	const [newUserToken, setNewUserToken] = useState<string>("");
 	const [girlNames, setGirlNames] = useState<Name[]>([]);
 	const [boyNames, setBoyNames] = useState<Name[]>([]);
 	const [selectedNames, setSelectedNames] = useState<Name[]>([]);
 	const [newNames, setNewNames] = useState<string>("");
 	const [newNameType, setNewNameType] = useState<"boy" | "girl">("boy");
+	const [submittingNames, setSubmittingNames] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(false);
 	const router = useRouter();
 
 	useEffect(() => {
+		if (!adminToken) {
+			router.push("/admin");
+			return;
+		}
 		fetch("/api/submissions", {
 			headers: {
 				Authorization: `Bearer ${adminToken}`,
@@ -45,7 +81,6 @@ export default function AdminDashboard() {
 		})
 			.then((res) => res.json())
 			.then((data) => {
-				console.log("🚀 ~ useEffect ~ data:", data);
 				setSubmissions(data ? data : null);
 			});
 
@@ -70,7 +105,13 @@ export default function AdminDashboard() {
 		  }, {} as { [name: string]: number })
 		: null;
 
+	const logoutToLoginPage = (res: { status: number }) => {
+		if (res.status === 401) router.push("/admin/login");
+		return;
+	};
+
 	const generateToken = async () => {
+		setLoading(true);
 		if (!adminToken) {
 			router.push("/admin");
 			return;
@@ -81,12 +122,23 @@ export default function AdminDashboard() {
 				Authorization: `Bearer ${adminToken}`,
 			},
 		});
+
+		logoutToLoginPage(res);
+
 		if (res.status === 200) {
 			const data = await res.json();
 			setNewUserToken(data.token);
+			setNewUserTokenLink(data.link);
+			setLoading(false);
 		} else {
+			setLoading(false);
 			alert("Failed to generate token");
 		}
+	};
+
+	const handleNameDeselect = (name: Name) => {
+		const filteredNames = selectedNames.filter((val) => val._id != name._id);
+		setSelectedNames(filteredNames);
 	};
 
 	const handleSelectName = (name: Name) => {
@@ -98,7 +150,6 @@ export default function AdminDashboard() {
 				name.type == "boy" &&
 				selectedNames.filter((name) => name.type == "boy").length < 5
 			) {
-				console.log("boy");
 				setSelectedNames([...selectedNames, name]);
 			} else if (name.type == "boy") {
 				alert("only 5 boy names can be selected");
@@ -108,15 +159,26 @@ export default function AdminDashboard() {
 				name.type == "girl" &&
 				selectedNames.filter((name) => name.type == "girl").length < 5
 			) {
-				console.log("girl");
 				setSelectedNames([...selectedNames, name]);
 			} else if (name.type == "girl") {
 				alert("only 5 girl names can be selected");
 			}
+		} else if (
+			selectedNames.length >= 10 &&
+			!selectedNames.some((n) => n._id === name._id)
+		) {
+			alert("only 10 names can be selected");
+		} else {
+			const filteredNames = selectedNames.filter((val) => val._id != name._id);
+			setSelectedNames([...filteredNames]);
 		}
 	};
 
 	const handleSubmit = async () => {
+		if (selectedNames.length < 10) {
+			alert("10 names should be selected");
+		}
+		setSubmittingNames(true);
 		const res = await fetch("/api/submit", {
 			method: "POST",
 			headers: {
@@ -129,10 +191,12 @@ export default function AdminDashboard() {
 				selectedNames: [...selectedNames.map((name) => name._id)],
 			}),
 		});
+		logoutToLoginPage(res);
 		if (res.status === 200) {
 			alert("Submission done successfully");
 			setNewNames("");
 			setNewNameType("boy");
+			setSubmittingNames(false);
 			fetch("/api/submissions", {
 				headers: {
 					Authorization: `Bearer ${adminToken}`,
@@ -140,10 +204,13 @@ export default function AdminDashboard() {
 			})
 				.then((res) => res.json())
 				.then((data) => {
-					console.log("🚀 ~ useEffect ~ data:", data);
 					setSubmissions(data ? data : null);
+				})
+				.catch((error) => {
+					alert(error);
 				});
 		} else {
+			setSubmittingNames(false);
 			alert("Failed to Submit names");
 		}
 	};
@@ -162,6 +229,7 @@ export default function AdminDashboard() {
 			},
 			body: JSON.stringify({ names: namesArray, type: newNameType }),
 		});
+		logoutToLoginPage(res);
 		if (res.status === 200) {
 			alert("Names added successfully");
 			setNewNames("");
@@ -172,68 +240,109 @@ export default function AdminDashboard() {
 	};
 
 	return (
-		<div>
-			<h1>Admin Dashboard</h1>
-			<button onClick={generateToken}>Generate User Token</button>
-			{newUserToken && (
-				<div>
-					<h2>New User Token</h2>
-					<p>{newUserToken}</p>
-				</div>
-			)}
-			<h2>Name Counts</h2>
-			<ul>
-				{nameCounts &&
-					Object.entries(nameCounts).map(([name, count]) => (
-						<li key={name}>
-							{name}: {count}
-						</li>
-					))}
-			</ul>
-			<div>
-				<h2>Add Names</h2>
-				<textarea
-					value={newNames}
-					onChange={(e) => setNewNames(e.target.value)}
-					placeholder="Enter names separated by commas"
-				/>
-				<select
-					title="addBabyNamesToList"
-					value={newNameType}
-					onChange={(e) => setNewNameType(e.target.value as "boy" | "girl")}
+		<ThemeProvider theme={darkTheme}>
+			{adminToken && <div className="p-3">
+				<Typography className="pt-1 pb-0" variant="h5" gutterBottom>
+					Admin Dashboard
+				</Typography>
+				<LoadingButton
+					onClick={generateToken}
+					endIcon={<SettingsSuggestIcon />}
+					loading={loading}
+					loadingPosition="end"
+					variant="contained"
 				>
-					<option value="boy">Boy</option>
-					<option value="girl">Girl</option>
-				</select>
-				<button onClick={handleAddNames}>Add Names</button>
-			</div>
-			<NamesSelector
-				NameType={"girl"}
-				titleHeading={"Girl Names"}
-				Names={girlNames}
-				selectedNames={selectedNames}
-				handleSelectName={handleSelectName}
-			/>
-			<NamesSelector
-				NameType={"boy"}
-				titleHeading={"Boy Names"}
-				Names={boyNames}
-				selectedNames={selectedNames}
-				handleSelectName={handleSelectName}
-			/>
-			<div>
-				<h2>Selected Names</h2>
-				<List sx={style}>
-					{selectedNames.map((name) => (
-						<ListItem divider key={name._id}>
-							<ListItemText primary={name.name} />
-						</ListItem>
-					))}
-				</List>
-			</div>
-			<button disabled={selectedNames.length < 10} onClick={handleSubmit}>
-				Submit
-			</button>
-		</div>
+					Generate User Token
+				</LoadingButton>
+				{newUserTokenLink && (
+					<div>
+						<div style={{ wordWrap: "break-word" }}>{newUserToken}</div>
+						<Button
+							variant="contained"
+							color="success"
+							endIcon={<WhatsAppIcon sx={{ color: "white" }} />}
+							href={`https://wa.me/?text=${encodeURIComponent(
+								`Here is your access link: ${newUserTokenLink}`
+							)}`}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Share on WhatsApp
+						</Button>
+					</div>
+				)}
+				<Typography className="p-3 pt-1 pb-0" variant="h6" gutterBottom>
+					Name Counts
+				</Typography>
+				<ul className="pt-0 pb-2 p-3">
+					{nameCounts &&
+						Object.entries(nameCounts).map(([name, count]) => (
+							<li key={name}>
+								{name}: {count}
+							</li>
+						))}
+				</ul>
+				<div className="p-3 pt-0">
+					<Typography className="p-3 pt-0 pb-0" variant="h6" gutterBottom>
+						Add Names
+					</Typography>
+					<Box
+						component="form"
+						sx={{ "& .MuiTextField-root": { m: 1, width: "25ch" } }}
+						noValidate
+						autoComplete="off"
+					>
+						<div>
+							<TextField
+								id="new-names-adding-text-area"
+								value={newNames}
+								onChange={(e) => setNewNames(e.target.value)}
+								label="Enter names separated by commas"
+								multiline
+								maxRows={10}
+							/>
+						</div>
+					</Box>
+					<div style={{ display: "flex", justifyContent: "start" }}>
+						<div className="p-2">
+							<FormControl fullWidth>
+								<InputLabel id="genderType">Gender</InputLabel>
+								<Select
+									labelId="genderType-select-label"
+									id="genderType-select"
+									value={newNameType}
+									label="Age"
+									onChange={(e) =>
+										setNewNameType(e.target.value as "boy" | "girl")
+									}
+								>
+									<MenuItem value={"boy"}>Boy</MenuItem>
+									<MenuItem value={"girl"}>Girl</MenuItem>
+								</Select>
+							</FormControl>
+						</div>
+
+						<div className="p-2 flex justify-content-center">
+							<Button
+								color="primary"
+								variant="contained"
+								onClick={handleAddNames}
+							>
+								Add Names
+							</Button>
+						</div>
+					</div>
+				</div>
+				<NameSelection
+					selectedNames={selectedNames}
+					handleNameDeselect={handleNameDeselect}
+					handleSubmit={handleSubmit}
+					girlNames={girlNames}
+					boyNames={boyNames}
+					handleSelectName={handleSelectName}
+					submittingNames={submittingNames}
+				/>
+			</div>}
+		</ThemeProvider>
 	);
 }

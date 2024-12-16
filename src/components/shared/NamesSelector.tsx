@@ -14,7 +14,7 @@ const theme = createTheme({
 				root: {
 					"&.Mui-selected": {
 						backgroundColor: "#3e51eb",
-            color: "white",
+						color: "white"
 					},
 				},
 			},
@@ -24,6 +24,7 @@ const theme = createTheme({
 
 const style = {
 	py: 0,
+	color: 'black',
 	width: "100%",
 	maxWidth: 360,
 	borderRadius: 2,
