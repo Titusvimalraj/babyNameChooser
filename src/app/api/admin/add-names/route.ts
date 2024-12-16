@@ -1,6 +1,6 @@
 // app/api/admin/add-names/route.ts
 import { NextResponse } from 'next/server';
-import { dbConnect, dbDisconnect } from '@/utils/dbConnect';
+import { dbConnect } from '@/utils/dbConnect';
 import Name from '@/models/Name';
 import { withAdminAuth } from '@/utils/withAuth';
 

@@ -1,5 +1,4 @@
-// app/admin/page.tsx
-"use client";
+'use client';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, TextField } from "@mui/material";

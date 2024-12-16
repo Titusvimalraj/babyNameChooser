@@ -1,11 +1,9 @@
-// app/admin/dashboard/page.tsx
 "use client";
 import { useState, useEffect } from "react";
 import LoadingButton from "@mui/lab/LoadingButton";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
 import { useRouter } from "next/navigation";
-import NamesSelector from "@/components/shared/NamesSelector";
 import {
 	Box,
 	Button,
@@ -18,9 +16,6 @@ import {
 	ThemeProvider,
 	Typography,
 } from "@mui/material";
-import NameChip from "../../../components/shared/NameChip";
-import SendIcon from "@mui/icons-material/Send";
-import Grid from "@mui/material/Grid2";
 import NameSelection from "@/components/NameSelection";
 
 const darkTheme = createTheme({
@@ -35,15 +30,6 @@ const darkTheme = createTheme({
 	},
 });
 
-const style = {
-	py: 0,
-	width: "100%",
-	borderRadius: 2,
-	border: "1px solid",
-	borderColor: "divider",
-	backgroundColor: "background.paper",
-	padding: "5px",
-};
 export interface Name {
 	_id?: string;
 	name: string;
@@ -56,9 +42,9 @@ export interface Submission {
 }
 
 export default function AdminDashboard() {
-	const adminToken = localStorage.getItem("adminToken");
 	const [submissions, setSubmissions] = useState<Submission[]>([]);
 	const [newUserTokenLink, setNewUserTokenLink] = useState<string>("");
+	const [adminToken, setadminToken] = useState<string>("");
 	const [newUserToken, setNewUserToken] = useState<string>("");
 	const [girlNames, setGirlNames] = useState<Name[]>([]);
 	const [boyNames, setBoyNames] = useState<Name[]>([]);
@@ -72,10 +58,12 @@ export default function AdminDashboard() {
 	const router = useRouter();
 
 	useEffect(() => {
+		const adminToken = localStorage.getItem("adminToken");
 		if (!adminToken) {
 			router.push("/admin");
 			return;
 		}
+		setadminToken(adminToken);
 		fetch("/api/submissions", {
 			headers: {
 				Authorization: `Bearer ${adminToken}`,

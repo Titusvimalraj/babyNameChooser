@@ -1,13 +1,11 @@
-// app/user/page.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation"; // Ensure you import the NameChip component
 import { Name } from "./admin/dashboard/page";
 import NameSelection from "@/components/NameSelection";
 import { TextField } from "@mui/material";
 
-const UserPage = () => {
-	const storedToken = localStorage.getItem("userToken");
+const UserPageContent = () => {
 	const [girlNames, setGirlNames] = useState<Name[]>([]);
 	const [boyNames, setBoyNames] = useState<Name[]>([]);
 	const [selectedNames, setSelectedNames] = useState<Name[]>([]);
@@ -18,19 +16,24 @@ const UserPage = () => {
 	const searchParams = useSearchParams();
 
 	useEffect(() => {
-		const urlToken = searchParams.get("token");
-		if (urlToken) {
-			setToken(urlToken);
-			localStorage.setItem("userToken", urlToken);
-		} else {
-			const storedToken = localStorage.getItem("userToken");
-			if (!storedToken) {
-				router.push("/user/login");
+		const handleToken = () => {
+			const urlToken = searchParams.get("token");
+			if (urlToken) {
+				setToken(urlToken);
+				localStorage.setItem("userToken", urlToken);
 			} else {
-				setToken(storedToken);
+				const storedToken = localStorage.getItem("userToken");
+				if (!storedToken) {
+					router.push("/user/login");
+				} else {
+					setToken(storedToken);
+				}
 			}
+		};
+		if (typeof window !== "undefined") {
+			handleToken();
 		}
-	}, []);
+	}, [router, searchParams]);
 
 	useEffect(() => {
 		if (token) {
@@ -70,7 +73,6 @@ const UserPage = () => {
 				name.type == "boy" &&
 				selectedNames.filter((name) => name.type == "boy").length < 5
 			) {
-	
 				setSelectedNames([...selectedNames, name]);
 			} else if (name.type == "boy") {
 				alert("only 5 boy names can be selected");
@@ -80,7 +82,6 @@ const UserPage = () => {
 				name.type == "girl" &&
 				selectedNames.filter((name) => name.type == "girl").length < 5
 			) {
-	
 				setSelectedNames([...selectedNames, name]);
 			} else if (name.type == "girl") {
 				alert("only 5 girl names can be selected");
@@ -120,11 +121,11 @@ const UserPage = () => {
 		if (res.status === 200) {
 			alert("Submission done successfully");
 			setSubmittingNames(false);
-      setTimeout(()=>{
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userToken');
-        router.push(`/thank-you?username=${userName}`);
-      },1000)
+			setTimeout(() => {
+				localStorage.removeItem("userName");
+				localStorage.removeItem("userToken");
+				router.push(`/thank-you?username=${userName}`);
+			}, 1000);
 		} else {
 			setSubmittingNames(false);
 			alert("Failed to Submit names");
@@ -160,6 +161,14 @@ const UserPage = () => {
 				</div>
 			)}
 		</>
+	);
+};
+
+const UserPage = () => {
+	return (
+		<Suspense fallback={<div>Loading...</div>}>
+			<UserPageContent />
+		</Suspense>
 	);
 };
 

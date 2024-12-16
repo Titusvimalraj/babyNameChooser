@@ -12,6 +12,7 @@ export function withAuth(handler: (req: NextRequest) => Promise<NextResponse>) {
       jwt.verify(token, process.env.JWT_SECRET!);
       return await handler(req);
     } catch (error) {
+      console.log("🚀 ~ return ~ error:", error);
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
   };
@@ -30,7 +31,7 @@ export function withAdminAuth(handler: (req: NextRequest) => Promise<NextRespons
       }
       return await handler(req);
     } catch (error) {
-      console.log("🚀 ~ return ~ error:", error)
+      console.log("🚀 ~ return ~ error:", error);
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
   };

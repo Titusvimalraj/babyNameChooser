@@ -1,6 +1,6 @@
 // app/api/submit/route.ts
 import { NextResponse } from 'next/server';
-import { dbConnect, dbDisconnect } from '@/utils/dbConnect';
+import { dbConnect } from '@/utils/dbConnect';
 import Submission from '@/models/Submission';
 import { withAuth } from '@/utils/withAuth';
 
