@@ -24,7 +24,7 @@ function getRandomNameWeighted(namesWithWeights: NameWeight[]): string {
   return ''; // Fallback in case no name is selected
 }
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async () => {
   await dbConnect();
   try {
     const submissions = await Submission.find({})
