@@ -8,7 +8,7 @@ export interface IName extends Document {
 
 const NameSchema: Schema = new Schema({
   name: { type: String, required: true, unique:true, index: true },
-  type: { type: String, enum: ['boy', 'girl'], required: true },
+  type: { type: String, enum: ['boy', 'girl'], required: true, index: true },
 });
 
 const Name: Model<IName> = mongoose.models.Name || mongoose.model<IName>('Name', NameSchema);
