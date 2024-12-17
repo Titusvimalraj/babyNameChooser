@@ -102,6 +102,10 @@ const UserPageContent = () => {
 	};
 
 	const handleSubmit = async () => {
+		if(!userName){
+			alert('Please enter you name in the box! Your name missing');
+			return;
+		}
 		if (selectedNames.length < 10) {
 			alert("10 names should be selected");
 		}
