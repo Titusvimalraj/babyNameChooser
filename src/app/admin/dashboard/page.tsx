@@ -64,15 +64,6 @@ export default function AdminDashboard() {
 			return;
 		}
 		setadminToken(adminToken);
-		fetch("/api/submissions", {
-			headers: {
-				Authorization: `Bearer ${adminToken}`,
-			},
-		})
-			.then((res) => res.json())
-			.then((data) => {
-				setSubmissions(data ? data : null);
-			});
 
 		fetch("/api/names", {
 			headers: {
@@ -83,6 +74,15 @@ export default function AdminDashboard() {
 			.then((data) => {
 				setGirlNames(data.girlNames);
 				setBoyNames(data.boyNames);
+				fetch("/api/submissions", {
+					headers: {
+						Authorization: `Bearer ${adminToken}`,
+					},
+				})
+					.then((res) => res.json())
+					.then((data) => {
+						setSubmissions(data ? data : null);
+					});		
 			});
 	}, []);
 
