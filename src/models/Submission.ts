@@ -10,7 +10,7 @@ interface ISubmission extends Document {
 const SubmissionSchema: Schema = new Schema({
   userName: { type: String, required: true },
   selectedNames: [{ type: Schema.Types.ObjectId, ref: 'Name', required: true }], // Use ObjectId and reference 'Name'
-  token: { type: String, required: true, unique: true }, // Ensure token is unique
+  token: { type: String, required: true, unique: true, index: true }, // Ensure token is unique
 });
 
 const Submission: Model<ISubmission> = mongoose.models.Submission || mongoose.model<ISubmission>('Submission', SubmissionSchema);
